@@ -22,6 +22,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.apps.android.feature.auth.AuthScreen
 import com.apps.android.feature.feed.FeedScreen
+import com.apps.android.feature.feed.PostDetailScreen
 import com.apps.android.feature.post.PostCreateScreen
 import com.apps.android.feature.profile.ProfileScreen
 import com.apps.android.feature.search.SearchScreen
@@ -31,6 +32,9 @@ sealed class Screen(val route: String) {
     data object Feed : Screen("feed")
     data object Search : Screen("search")
     data object PostCreate : Screen("post_create")
+    data object PostDetail : Screen("post/{postId}") {
+        fun createRoute(postId: String) = "post/$postId"
+    }
     data object Profile : Screen("profile/{userId}") {
         fun createRoute(userId: String) = "profile/$userId"
     }
@@ -106,18 +110,32 @@ fun AppsNavHost(modifier: Modifier = Modifier) {
             }
             composable(Screen.Feed.route) {
                 FeedScreen(
-                    onPostClick = { postId -> /* TODO: navigate to post detail */ },
+                    onPostClick = { postId ->
+                        navController.navigate(Screen.PostDetail.createRoute(postId))
+                    },
                 )
             }
             composable(Screen.Search.route) {
                 SearchScreen(
-                    onPostClick = { postId -> /* TODO: navigate to post detail */ },
+                    onPostClick = { postId ->
+                        navController.navigate(Screen.PostDetail.createRoute(postId))
+                    },
                 )
             }
             composable(Screen.PostCreate.route) {
                 PostCreateScreen(
                     onBack = { navController.popBackStack() },
                     onPostCreated = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.PostDetail.route) { backStackEntry ->
+                val postId = backStackEntry.arguments?.getString("postId") ?: ""
+                PostDetailScreen(
+                    postId = postId,
+                    onBack = { navController.popBackStack() },
+                    onAuthorClick = { userId ->
+                        navController.navigate(Screen.Profile.createRoute(userId))
+                    },
                 )
             }
             composable(Screen.Profile.route) { backStackEntry ->
